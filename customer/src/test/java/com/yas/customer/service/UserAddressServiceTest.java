@@ -1,41 +1,4 @@
-// package com.yas.customer.service;
-
-// import com.yas.customer.repository.UserAddressRepository;
-// import org.junit.jupiter.api.Test;
-// import org.junit.jupiter.api.extension.ExtendWith;
-// import org.mockito.InjectMocks;
-// import org.mockito.Mock;
-// import org.mockito.junit.jupiter.MockitoExtension;
-// import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-// import org.springframework.security.core.context.SecurityContextHolder;
-
-// import static org.junit.jupiter.api.Assertions.*;
-
-// @ExtendWith(MockitoExtension.class)
-// class UserAddressServiceTest {
-
-//     @Mock
-//     private UserAddressRepository userAddressRepository;
-
-//     @Mock
-//     private LocationService locationService;
-
-//     @InjectMocks
-//     private UserAddressService userAddressService;
-
-//     @Test
-//     void testChooseDefaultAddress() {
-
-//         SecurityContextHolder.getContext().setAuthentication(
-//                 new UsernamePasswordAuthenticationToken("user1", null)
-//         );
-
-//         assertNotNull(userAddressService);
-//     }
-// }
-
 package com.yas.customer.service;
-
 
 import com.yas.commonlibrary.exception.AccessDeniedException;
 import com.yas.commonlibrary.exception.NotFoundException;

@@ -20,10 +20,10 @@ pipeline {
             }
         }
 
-        stage('Test Customer Service') {
+        stage('Test Rating Service') {
             steps {
-                echo 'Testing customer service...'
-                sh "mvn test -pl customer -am -Drevision=${REVISION}"
+                echo 'Testing rating service...'
+                sh "mvn test -pl rating -am -Drevision=${REVISION}"
             }
         }
 
@@ -31,10 +31,10 @@ pipeline {
             steps {
                 script {
                     echo 'Generating Jacoco Report...'
-                    sh "mvn jacoco:report -pl customer -Drevision=${REVISION}"
+                    sh "mvn jacoco:report -pl rating -Drevision=${REVISION}"
                     
                     def coverageStr = sh(
-                        script: "cat customer/target/site/jacoco/index.html | grep -o 'Total[^%]*%' | grep -oE '[0-9]+%' | tr -d '%' | head -n 1",
+                        script: "cat rating/target/site/jacoco/index.html | grep -o 'Total[^%]*%' | grep -oE '[0-9]+%' | tr -d '%' | head -n 1",
                         returnStdout: true
                     ).trim()
 
