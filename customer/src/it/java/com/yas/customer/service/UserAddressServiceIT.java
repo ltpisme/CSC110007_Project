@@ -5,6 +5,7 @@ import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
+import com.yas.customer.service.UserAddressService;
 import com.yas.commonlibrary.exception.NotFoundException;
 import com.yas.commonlibrary.IntegrationTestConfiguration;
 import com.yas.commonlibrary.exception.AccessDeniedException;
