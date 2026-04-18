@@ -1,0 +1,22 @@
+global:
+  env: dev
+
+backend:
+  image:
+    tag: latest
+
+cart:
+  image:
+    tag: latest
+
+product:
+  image:
+    tag: latest
+
+order:
+  image:
+    tag: latest
+
+payment:
+  image:
+    tag: latest

@@ -1,0 +1,22 @@
+global:
+  env: staging
+
+backend:
+  image:
+    tag: v1.2.3
+
+cart:
+  image:
+    tag: v1.2.3
+
+product:
+  image:
+    tag: v1.2.3
+
+order:
+  image:
+    tag: v1.2.3
+
+payment:
+  image:
+    tag: v1.2.3

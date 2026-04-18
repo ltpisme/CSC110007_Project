@@ -1,0 +1,66 @@
+apiVersion: v2
+name: yas-app
+description: Umbrella chart for YAS microservices
+type: application
+version: 0.1.0
+
+dependencies:
+  - name: backend
+    version: 0.1.0
+    repository: "file://../backend"
+
+  - name: cart
+    version: 0.2.0
+    repository: "file://../cart"
+
+  - name: product
+    version: 0.1.0
+    repository: "file://../product"
+
+  - name: order
+    version: 0.2.0
+    repository: "file://../order"
+
+  - name: payment
+    version: 0.2.0
+    repository: "file://../payment"
+
+  - name: customer
+    version: 0.1.0
+    repository: "file://../customer"
+
+  - name: inventory
+    version: 0.1.0
+    repository: "file://../inventory"
+
+  - name: location
+    version: 0.1.0
+    repository: "file://../location"
+
+  - name: rating
+    version: 0.1.0
+    repository: "file://../rating"
+
+  - name: recommendation
+    version: 0.1.0
+    repository: "file://../recommendation"
+
+  - name: search
+    version: 0.1.0
+    repository: "file://../search"
+
+  - name: tax
+    version: 0.1.0
+    repository: "file://../tax"
+
+  - name: ui
+    version: 0.1.0
+    repository: "file://../ui"
+
+  - name: storefront-ui
+    version: 0.1.0
+    repository: "file://../storefront-ui"
+
+  - name: storefront-bff
+    version: 0.1.0
+    repository: "file://../storefront-bff"
