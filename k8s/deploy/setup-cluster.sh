@@ -6,19 +6,25 @@ helm repo add postgres-operator-charts https://opensource.zalando.com/postgres-o
 helm repo add strimzi https://strimzi.io/charts/
 helm repo add akhq https://akhq.io/
 helm repo add elastic https://helm.elastic.co
-helm repo add grafana https://grafana.github.io/helm-charts
-helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts
+# helm repo add grafana https://grafana.github.io/helm-charts
+# helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+# helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts
 helm repo add jetstack https://charts.jetstack.io
 helm repo update
 
 #Read configuration value from cluster-config.yaml file
-read -rd '' DOMAIN POSTGRESQL_REPLICAS POSTGRESQL_USERNAME POSTGRESQL_PASSWORD \
+# read -rd '' DOMAIN POSTGRESQL_REPLICAS POSTGRESQL_USERNAME POSTGRESQL_PASSWORD \
+# KAFKA_REPLICAS ZOOKEEPER_REPLICAS ELASTICSEARCH_REPLICAES \
+# GRAFANA_USERNAME GRAFANA_PASSWORD \
+# < <(yq -r '.domain, .postgresql.replicas, .postgresql.username,
+#  .postgresql.password, .kafka.replicas, .zookeeper.replicas,
+#  .elasticsearch.replicas, .grafana.username, .grafana.password' ./cluster-config.yaml)
+
+ read -rd '' DOMAIN POSTGRESQL_REPLICAS POSTGRESQL_USERNAME POSTGRESQL_PASSWORD \
 KAFKA_REPLICAS ZOOKEEPER_REPLICAS ELASTICSEARCH_REPLICAES \
-GRAFANA_USERNAME GRAFANA_PASSWORD \
 < <(yq -r '.domain, .postgresql.replicas, .postgresql.username,
  .postgresql.password, .kafka.replicas, .zookeeper.replicas,
- .elasticsearch.replicas, .grafana.username, .grafana.password' ./cluster-config.yaml)
+ .elasticsearch.replicas' ./cluster-config.yaml)
 
 # Install the postgres-operator
 helm upgrade --install postgres-operator postgres-operator-charts/postgres-operator \
@@ -38,7 +44,8 @@ helm upgrade --install pgadmin ./postgres/pgadmin \
 
 #Install strimzi-kafka-operator
 helm upgrade --install kafka-operator strimzi/strimzi-kafka-operator \
---create-namespace --namespace kafka
+--create-namespace --namespace kafka \
+--version 0.38.0 # add version
 
 #Install kafka and postgresql connector
 helm upgrade --install kafka-cluster ./kafka/kafka-cluster \
@@ -85,12 +92,12 @@ helm upgrade --install cert-manager jetstack/cert-manager \
   --set admissionWebhooks.certManager.create=true
 
 #Install opentelemetry-operator
-helm upgrade --install opentelemetry-operator open-telemetry/opentelemetry-operator \
---create-namespace --namespace observability
+# helm upgrade --install opentelemetry-operator open-telemetry/opentelemetry-operator \
+# --create-namespace --namespace observability
 
 #Install opentelemetry-collector
-helm upgrade --install opentelemetry-collector ./observability/opentelemetry \
---create-namespace --namespace observability
+# helm upgrade --install opentelemetry-collector ./observability/opentelemetry \
+# --create-namespace --namespace observability
 
 #Install promtail
 # helm upgrade --install promtail grafana/promtail \

@@ -9,8 +9,8 @@ spec:
 
   source:
     repoURL: https://github.com/ltpisme/CSC110007_Project.git
-    targetRevision: main
-    path: charts/yas-app
+    targetRevision: cd/setup
+    path: k8s/charts/yas-app
     helm:
       valueFiles:
         - values-dev.yaml
