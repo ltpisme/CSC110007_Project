@@ -34,7 +34,7 @@ pipeline {
             steps {
                 checkout scmGit(
                     branches: [[name: 'main']],
-                    userRemoteConfigs: [[url: 'https://github.com/Hownameee/yas-CI-CD.git']]
+                    userRemoteConfigs: [[url: 'https://github.com/ltpisme/CSC110007_Project.git']]
                 )
             }
         }
