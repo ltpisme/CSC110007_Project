@@ -2,35 +2,14 @@ pipeline {
     agent any
 
     parameters {
-        choice(name: 'TARGET_ENV', choices: ['dev', 'staging'], description: 'Environment to deploy to')
-        string(name: 'TARGET_TAG', defaultValue: '', description: 'Specific tag to deploy (e.g., v1.2.3). If empty, branch logic is used.')
-        string(name: 'common_branch', defaultValue: '', description: 'Override branch for all services (used by CI)')
-        // Tham số cho từng service đúng như yêu cầu mục 4
-        string(name: 'backoffice_bff', defaultValue: 'main', description: 'Branch for backoffice-bff')
-        string(name: 'backoffice_ui', defaultValue: 'main', description: 'Branch for backoffice-ui')
-        string(name: 'storefront_bff', defaultValue: 'main', description: 'Branch for storefront-bff')
-        string(name: 'storefront_ui', defaultValue: 'main', description: 'Branch for storefront-ui')
-        string(name: 'cart', defaultValue: 'main', description: 'Branch for cart')
-        string(name: 'customer', defaultValue: 'main', description: 'Branch for customer')
-        string(name: 'inventory', defaultValue: 'main', description: 'Branch for inventory')
-        string(name: 'location', defaultValue: 'main', description: 'Branch for location')
-        string(name: 'media', defaultValue: 'main', description: 'Branch for media')
-        string(name: 'order', defaultValue: 'main', description: 'Branch for order')
-        string(name: 'payment', defaultValue: 'main', description: 'Branch for payment')
-        string(name: 'product', defaultValue: 'main', description: 'Branch for product')
-        string(name: 'promotion', defaultValue: 'main', description: 'Branch for promotion')
-        string(name: 'rating', defaultValue: 'main', description: 'Branch for rating')
-        string(name: 'search', defaultValue: 'main', description: 'Branch for search')
-        string(name: 'tax', defaultValue: 'main', description: 'Branch for tax')
-        string(name: 'recommendation', defaultValue: 'main', description: 'Branch for recommendation')
-        string(name: 'webhook', defaultValue: 'main', description: 'Branch for webhook')
-        string(name: 'sampledata', defaultValue: 'main', description: 'Branch for sampledata')
+        string(name: 'IMAGE_TAG', defaultValue: 'latest', description: 'Tag to deploy for all services')
+        booleanParam(name: 'FORCE_SYNC', defaultValue: true, description: 'Force ArgoCD to sync immediately')
     }
 
     environment {
-        GITOPS_REPO = 'https://github.com/BongLanTrungMuoi/yas-gitops.git'
-        VALUES_FILE = "values-${params.TARGET_ENV}.yaml"
-        ARGO_APP    = "yas-root-${params.TARGET_ENV}"
+        GITOPS_REPO = 'https://github.com/Melyenn/yas-gitops.git'
+        // Dùng ssh agent hoặc git credentials tùy setup của Jenkins
+        GIT_URL = "github.com:Melyenn/yas-gitops.git"
     }
 
     stages {
@@ -38,6 +17,7 @@ pipeline {
             steps {
                 script {
                     sh "rm -rf yas-gitops"
+                    // Clone sử dụng git credentials đã cấu hình trong Jenkins
                     checkout scmGit(
                         branches: [[name: 'main']],
                         userRemoteConfigs: [[url: env.GITOPS_REPO]]
@@ -46,30 +26,21 @@ pipeline {
             }
         }
 
-        stage('Determine Tags & Update GitOps') {
+        stage('Update Image Tags') {
             steps {
                 script {
                     def services = [
                         "backoffice-bff", "backoffice-ui", "storefront-bff", "storefront-ui", 
                         "cart", "customer", "inventory", "location", "media", "order", 
                         "payment", "product", "promotion", "rating", "search", "tax", 
-                        "recommendation", "webhook", "sampledata"
+                        "recommendation", "webhook", "sampledata", "swagger-ui"
                     ]
                     
+                    echo "Updating services in values-dev.yaml to tag: ${params.IMAGE_TAG}"
+                    
                     for (svc in services) {
-                        def paramName = svc.replace('-', '_')
-                        def branchName = params.common_branch ?: (params."${paramName}" ?: 'main')
-                        def tag = 'latest'
-
-                        if (params.TARGET_TAG) {
-                            tag = params.TARGET_TAG
-                        } else if (branchName != 'main') {
-                            echo "Fetching latest commit ID for ${svc} from branch ${branchName}..."
-                            tag = sh(script: "git ls-remote https://github.com/Hownameee/yas.git ${branchName} | cut -f1 | cut -c1-7", returnStdout: true).trim()
-                        }
-                        
-                        echo "Setting ${svc} to tag: ${tag} in ${env.VALUES_FILE}"
-                        sh "yq -i '.services.\"${svc}\".tag = \"${tag}\"' ${env.VALUES_FILE}"
+                        // Cập nhật tag cho từng service trong map services
+                        sh "yq -i '.services.\"${svc}\".tag = \"${params.IMAGE_TAG}\"' values-dev.yaml"
                     }
                 }
             }
@@ -78,52 +49,38 @@ pipeline {
         stage('Git Commit and Push') {
             steps {
                 script {
-                    // Sử dụng ID GitHub App của bạn: 'jenkins-yas'
-                    withCredentials([usernamePassword(credentialsId: 'jenkins-yas', 
-                                    passwordVariable: 'GITHUB_APP_TOKEN', 
-                                    usernameVariable: 'GITHUB_APP_USER')]) {
-                        
-                        sh "git config user.email jenkins-bot@yas.local"
-                        sh "git config user.name 'Jenkins GitOps Bot'"
-                        sh "git add ${env.VALUES_FILE}"
-                        
-                        // Tránh lỗi nếu không có thay đổi gì để commit
-                        sh """
-                            if git diff --cached --quiet; then
-                                echo "No changes to commit"
-                            else
-                                git commit -m 'deploy: update ${params.TARGET_ENV} images (Build #${env.BUILD_NUMBER}) [skip ci]'
-                                # Đẩy code bằng token của GitHub App
-                                git push https://x-access-token:${GITHUB_APP_TOKEN}@github.com/BongLanTrungMuoi/yas-gitops.git HEAD:main
-                            fi
-                        """
-                    }
+                    sh """
+                        git config user.email "jenkins-bot@yas.local"
+                        git config user.name "Jenkins GitOps Bot"
+                        git add values-dev.yaml
+                        git commit -m "deploy: update images to ${params.IMAGE_TAG} (Build #${env.BUILD_ID})" || echo "No changes to commit"
+                        git push origin main
+                    """
                 }
             }
         }
 
-        stage('ArgoCD Sync & Info') {
+        stage('ArgoCD Manual Sync') {
+            when {
+                expression { params.FORCE_SYNC == true }
+            }
             steps {
                 script {
-                    // Force ArgoCD sync
-                    sh "kubectl patch application ${env.ARGO_APP} -n argocd --type merge -p '{\"metadata\":{\"annotations\":{\"argocd.argoproj.io/refresh\":\"hard\"}}}'"
-                    
-                    // Mục 5: Hiển thị thông tin truy cập
-                    def domain = sh(script: "yq -r '.global.domain' ${env.VALUES_FILE}", returnStdout: true).trim()
-                    def env_tag = sh(script: "yq -r '.global.envTag' ${env.VALUES_FILE}", returnStdout: true).trim()
-                    def nodeIp = sh(script: "kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type==\"InternalIP\")].address}'", returnStdout: true).trim()
-                    
-                    echo "=========================================================="
-                    echo " DEPLOYMENT TRIGGERED TO ${params.TARGET_ENV.toUpperCase()}"
-                    echo "----------------------------------------------------------"
-                    echo "Add this to your /etc/hosts:"
-                    echo "${nodeIp} identity-${env_tag}.${domain}"
-                    echo "${nodeIp} backoffice-${env_tag}.${domain}"
-                    echo "${nodeIp} storefront-${env_tag}.${domain}"
-                    echo "${nodeIp} api-${env_tag}.${domain}"
-                    echo "=========================================================="
+                    echo "Triggering hard refresh on ArgoCD Root App..."
+                    // Lệnh này yêu cầu Jenkins có quyền kubectl hoặc gọi qua API của ArgoCD
+                    // Ở đây dùng kubectl patch như mình đã làm thủ công
+                    sh "kubectl patch application yas-root-dev -n argocd --type merge -p '{\"metadata\":{\"annotations\":{\"argocd.argoproj.io/refresh\":\"hard\"}}}'"
                 }
             }
+        }
+    }
+
+    post {
+        success {
+            echo "=========================================================="
+            echo " GITOP DEPLOYMENT PUSHED SUCCESSFULLY"
+            echo " Monitor ArgoCD at: http://argocd.yas.local.com"
+            echo "=========================================================="
         }
     }
 }
