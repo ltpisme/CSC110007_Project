@@ -15,17 +15,17 @@ echo "🌐 Exposing ArgoCD UI..."
 kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "NodePort"}}'
 
 echo "🔑 Getting initial admin password..."
-kubectl -n argocd get secret argocd-initial-admin-secret \
-  -o jsonpath="{.data.password}" | base64 -d
+ARGO_PASS=$(kubectl -n argocd get secret argocd-initial-admin-secret \
+  -o jsonpath="{.data.password}" | base64 -d)
 
-kubectl port-forward svc/argocd-server -n argocd 8080:443
+kubectl port-forward svc/argocd-server -n argocd 8080:443 &
 
 echo ""
-echo "✅ ArgoCD installed!"
-echo "👉 Access UI:"
-echo "   kubectl port-forward svc/argocd-server -n argocd 8080:443"
-echo "   http://localhost:8080"
-echo "   user: admin"
+echo "ArgoCD installed!"
+echo "Access UI"
+echo "Url: http://localhost:8080"
+echo "User: admin"
+echo "Password: $ARGO_PASS"
 
 kubectl apply -n argocd -f argocd/dev-app.yml
 kubectl apply -n argocd -f argocd/staging-app.yml
