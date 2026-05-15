@@ -41,6 +41,6 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
-          context: ./backoffice-bff
+          context: ./backofficehow to use nvida gpu free in kaggle-bff
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/yas-backoffice-bff:${{ env.DOCKER_TAG }}
